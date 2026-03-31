@@ -2,7 +2,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$OpenCodeConfigDir  = Join-Path $env:APPDATA "opencode"
+$OpenCodeConfigDir  = Join-Path $HOME ".config\opencode"
 $OpenCodeConfigFile = Join-Path $OpenCodeConfigDir "opencode.json"
 $OpenCodePackageFile = Join-Path $OpenCodeConfigDir "package.json"
 $AgentSettingsFile  = Join-Path $HOME ".agent\settings.json"
@@ -21,16 +21,86 @@ if ($nodeCmd) {
     $nodeVersion = & node --version
     Print-Ok "Node.js already installed ($nodeVersion)"
 } else {
-    Write-Host "    Node.js not found. Installing via winget..."
+    Write-Host "    Node.js not found. Attempting installation..."
+
+    $installed = $false
+
+    # Try winget first
     $winget = Get-Command winget -ErrorAction SilentlyContinue
     if ($winget) {
-        winget install OpenJS.NodeJS --silent --accept-package-agreements --accept-source-agreements
-        # Refresh PATH
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
-                    [System.Environment]::GetEnvironmentVariable("Path","User")
-        Print-Ok "Node.js installed ($(& node --version))"
-    } else {
-        Write-Host "ERROR: winget not available. Please install Node.js v18+ from https://nodejs.org and re-run this script."
+        Write-Host "    Trying winget..."
+        try {
+            $result = winget install OpenJS.NodeJS --silent --accept-package-agreements --accept-source-agreements 2>&1
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
+                        [System.Environment]::GetEnvironmentVariable("Path","User")
+            if (Get-Command node -ErrorAction SilentlyContinue) {
+                Print-Ok "Node.js installed via winget ($(& node --version))"
+                $installed = $true
+            }
+        } catch {
+            Write-Host "    winget failed, falling back to direct download..."
+        }
+    }
+
+    # Fall back to direct download
+    if (-not $installed) {
+        Write-Host "    Downloading Node.js LTS installer..."
+        $nodeInstallerUrl = "https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi"
+        $nodeInstallerPath = Join-Path $env:TEMP "node-installer.msi"
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri $nodeInstallerUrl -OutFile $nodeInstallerPath -UseBasicParsing
+            if (-not (Test-Path $nodeInstallerPath)) {
+                throw "Installer download failed - file not found at $nodeInstallerPath"
+            }
+            Write-Host "    Running Node.js installer (this may take a moment)..."
+
+            # Check for admin rights; installer requires elevation
+            $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+                [Security.Principal.WindowsBuiltinRole]::Administrator)
+
+            if ($isAdmin) {
+                $proc = Start-Process msiexec.exe -ArgumentList "/i `"$nodeInstallerPath`" /qn /norestart ADDLOCAL=ALL" -Wait -PassThru -NoNewWindow
+            } else {
+                Write-Host "    (Elevation required - you may see a UAC prompt)"
+                $proc = Start-Process msiexec.exe -ArgumentList "/i `"$nodeInstallerPath`" /passive /norestart ADDLOCAL=ALL" -Wait -PassThru -Verb RunAs
+            }
+
+            if ($proc.ExitCode -ne 0) {
+                throw "msiexec exited with code $($proc.ExitCode)"
+            }
+
+            Remove-Item $nodeInstallerPath -ErrorAction SilentlyContinue
+
+            # Refresh PATH
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
+                        [System.Environment]::GetEnvironmentVariable("Path","User")
+
+            # Also probe common install locations in case PATH refresh is insufficient
+            $commonNodePaths = @(
+                "C:\Program Files\nodejs",
+                "C:\Program Files (x86)\nodejs"
+            )
+            foreach ($p in $commonNodePaths) {
+                if ((Test-Path "$p\node.exe") -and ($env:Path -notlike "*$p*")) {
+                    $env:Path = "$p;$env:Path"
+                }
+            }
+
+            if (Get-Command node -ErrorAction SilentlyContinue) {
+                Print-Ok "Node.js installed via direct download ($(& node --version))"
+                $installed = $true
+            } else {
+                throw "node.exe not found after install - PATH may need a terminal restart"
+            }
+        } catch {
+            Write-Host "    Direct download failed: $_"
+        }
+    }
+
+    if (-not $installed) {
+        Write-Host "ERROR: Could not install Node.js automatically."
+        Write-Host "       Please install Node.js v18+ from https://nodejs.org, then re-run this script."
         exit 1
     }
 }
