@@ -156,18 +156,25 @@ print_ok "Written to $AGENT_SETTINGS_FILE"
 
 print_step "Configuring OpenCode PNNL provider..."
 
-echo "Enter your PNNL API Key:"
-read -rs API_KEY
-echo ""
-if [ -z "$API_KEY" ]; then
-  echo "ERROR: PNNL API key cannot be empty."
-  exit 1
-fi
-
 mkdir -p "$OPENCODE_CONFIG_DIR"
 
 if [ ! -f "$OPENCODE_CONFIG_FILE" ]; then
   echo '{}' > "$OPENCODE_CONFIG_FILE"
+fi
+
+EXISTING_API_KEY=$(jq -r '.provider.pnnl.options.apiKey // ""' "$OPENCODE_CONFIG_FILE" 2>/dev/null)
+
+if [ -n "$EXISTING_API_KEY" ]; then
+  print_skip "PNNL API key already configured"
+  API_KEY="$EXISTING_API_KEY"
+else
+  echo "Enter your PNNL API Key:"
+  read -rs API_KEY
+  echo ""
+  if [ -z "$API_KEY" ]; then
+    echo "ERROR: PNNL API key cannot be empty."
+    exit 1
+  fi
 fi
 
 jq --arg apiKey "$API_KEY" '
@@ -209,7 +216,19 @@ else
 fi
 print_ok "ESM package boundary set at $OPENCODE_PACKAGE_FILE"
 
-# ─── 8. Test JIRA connection ──────────────────────────────────────────────────
+# ─── 8. Copy skills to OpenCode config directory ─────────────────────────────
+
+print_step "Copying skills to $OPENCODE_CONFIG_DIR/skills..."
+
+if [ -d "$SCRIPT_DIR/skills" ]; then
+  mkdir -p "$OPENCODE_CONFIG_DIR/skills"
+  cp -r "$SCRIPT_DIR/skills/." "$OPENCODE_CONFIG_DIR/skills/"
+  print_ok "Skills copied to $OPENCODE_CONFIG_DIR/skills"
+else
+  print_skip "No skills directory found in $SCRIPT_DIR"
+fi
+
+# ─── 9. Test JIRA connection ──────────────────────────────────────────────────
 
 print_step "Testing JIRA connection..."
 
