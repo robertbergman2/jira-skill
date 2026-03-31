@@ -2,7 +2,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$OpenCodeConfigDir  = Join-Path $HOME ".config\opencode"
+$OpenCodeConfigDir  = Join-Path $env:APPDATA "opencode"
 $OpenCodeConfigFile = Join-Path $OpenCodeConfigDir "opencode.json"
 $OpenCodePackageFile = Join-Path $OpenCodeConfigDir "package.json"
 $AgentSettingsFile  = Join-Path $HOME ".agent\settings.json"
@@ -130,15 +130,6 @@ Print-Ok "Written to $AgentSettingsFile"
 
 Print-Step "Configuring OpenCode PNNL provider..."
 
-$ApiKeySecure = Read-Host "Enter your PNNL API Key" -AsSecureString
-$ApiKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ApiKeySecure)
-)
-if ([string]::IsNullOrWhiteSpace($ApiKey)) {
-    Write-Host "ERROR: PNNL API key cannot be empty."
-    exit 1
-}
-
 if (!(Test-Path $OpenCodeConfigDir)) {
     New-Item -ItemType Directory -Path $OpenCodeConfigDir -Force | Out-Null
 }
@@ -151,6 +142,25 @@ if (Test-Path $OpenCodeConfigFile) {
 
 if (-not (Get-Member -InputObject $config -Name "provider" -MemberType NoteProperty)) {
     $config | Add-Member -MemberType NoteProperty -Name "provider" -Value ([PSCustomObject]@{})
+}
+
+$existingApiKey = $null
+if (Get-Member -InputObject $config.provider -Name "pnnl" -MemberType NoteProperty -ErrorAction SilentlyContinue) {
+    $existingApiKey = $config.provider.pnnl.options.apiKey
+}
+
+if (-not [string]::IsNullOrWhiteSpace($existingApiKey)) {
+    Print-Skip "PNNL API key already configured"
+    $ApiKey = $existingApiKey
+} else {
+    $ApiKeySecure = Read-Host "Enter your PNNL API Key" -AsSecureString
+    $ApiKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+        [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ApiKeySecure)
+    )
+    if ([string]::IsNullOrWhiteSpace($ApiKey)) {
+        Write-Host "ERROR: PNNL API key cannot be empty."
+        exit 1
+    }
 }
 
 $pnnlProvider = [PSCustomObject]@{
@@ -193,11 +203,27 @@ $pkg | Add-Member -MemberType NoteProperty -Name "type" -Value "module" -Force
 $pkg | ConvertTo-Json -Depth 10 | Set-Content $OpenCodePackageFile
 Print-Ok "ESM package boundary set at $OpenCodePackageFile"
 
-# ─── 7. Test JIRA connection ──────────────────────────────────────────────────
+# ─── 7. Copy skills to OpenCode config directory ─────────────────────────────
+
+Print-Step "Copying skills to $OpenCodeConfigDir\skills..."
+
+$skillsSrc = Join-Path $ScriptDir "skills"
+if (Test-Path $skillsSrc) {
+    $skillsDst = Join-Path $OpenCodeConfigDir "skills"
+    if (!(Test-Path $skillsDst)) {
+        New-Item -ItemType Directory -Path $skillsDst -Force | Out-Null
+    }
+    Copy-Item -Path "$skillsSrc\*" -Destination $skillsDst -Recurse -Force
+    Print-Ok "Skills copied to $skillsDst"
+} else {
+    Print-Skip "No skills directory found in $ScriptDir"
+}
+
+# ─── 8. Test JIRA connection ──────────────────────────────────────────────────
 
 Print-Step "Testing JIRA connection..."
 
-$testScript = Join-Path $ScriptDir "scripts\test-connection.js"
+$testScript = Join-Path $ScriptDir "skills\jira\scripts\test-connection.js"
 if (Test-Path $testScript) {
     try {
         & node $testScript
