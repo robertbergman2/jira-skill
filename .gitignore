@@ -1,0 +1,6 @@
+.venv/
+node_modules/
+*.pdf
+AI Discovery Summit PPT.pptx
+~$*.pptx
+presentation.typ

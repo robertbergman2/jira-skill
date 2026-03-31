@@ -1,0 +1,144 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "pnnl": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "PNNL AI Incubator",
+      "options": {
+        "baseURL": "https://ai-incubator-api.pnnl.gov",
+        "apiKey": "sk-YOUR-PNNL-API-KEY-HERE"
+      },
+      "models": {
+        "gpt-5-birthright": { "name": "GPT-5" },
+        "gpt-5.1-birthright": { "name": "GPT-5.1" },
+        "gpt-5.2-birthright": { "name": "GPT-5.2" },
+        "gpt-5.4-birthright": { "name": "GPT-5.4 (Best Quality)" },
+        "gpt-4.1-birthright": { "name": "GPT-4.1 (Stable)" },
+        "o3-birthright": { "name": "O3 (Reasoning)" },
+        "o4-mini-birthright": { "name": "O4 Mini (Fast + Cheap)" },
+        "grok-4-birthright": { "name": "Grok 4 (Premium)" },
+        "grok-4-fast-non-reasoning-birthright": { "name": "Grok 4 Fast (Non-Reasoning)" },
+        "grok-4-fast-reasoning-birthright": { "name": "Grok 4 Fast (Reasoning)" },
+        "claude-sonnet-4-6-birthright": { "name": "Claude Sonnet 4.6" },
+        "claude-sonnet-4-5-20250929-v1-birthright": { "name": "Claude Sonnet 4.5" },
+        "claude-sonnet-4-20250514-v1-birthright": { "name": "Claude Sonnet 4 (Legacy)" },
+        "claude-haiku-4-5-20251001-v1-birthright": { "name": "Claude Haiku 4.5 (Fast)" }
+      }
+    },
+    "azure-ai-foundry": {
+      "name": "Azure AI Foundry",
+      "npm": "@ai-sdk/anthropic",
+      "api": "https://YOUR-PROJECT.services.ai.azure.com/anthropic/v1",
+      "env": ["AZURE_AI_FOUNDRY_API_KEY"],
+      "models": {
+        "claude-sonnet-4-5": {
+          "name": "Claude Sonnet 4.5",
+          "tool_call": true,
+          "attachment": true,
+          "reasoning": true,
+          "temperature": true,
+          "limit": { "context": 1000000, "output": 64000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "claude-opus-4-5": {
+          "name": "Claude Opus 4.5",
+          "tool_call": true,
+          "attachment": true,
+          "reasoning": true,
+          "temperature": true,
+          "limit": { "context": 200000, "output": 32000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "claude-haiku-4-5": {
+          "name": "Claude Haiku 4.5",
+          "tool_call": true,
+          "attachment": true,
+          "temperature": true,
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        }
+      },
+      "options": {
+        "apiKey": "YOUR-AZURE-AI-FOUNDRY-API-KEY-HERE"
+      }
+    },
+    "azure-ai-foundry-openai": {
+      "name": "Azure AI Foundry (OpenAI)",
+      "npm": "@ai-sdk/openai",
+      "api": "https://YOUR-PROJECT.services.ai.azure.com/openai/v1",
+      "env": ["AZURE_AI_FOUNDRY_API_KEY"],
+      "models": {
+        "gpt-5.2": {
+          "name": "GPT-5.2",
+          "tool_call": true,
+          "attachment": true,
+          "reasoning": true,
+          "temperature": true,
+          "limit": { "context": 400000, "output": 128000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "gpt-5.1": {
+          "name": "GPT-5.1",
+          "tool_call": true,
+          "attachment": true,
+          "reasoning": true,
+          "temperature": true,
+          "limit": { "context": 400000, "output": 128000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "gpt-5": {
+          "name": "GPT-5",
+          "tool_call": true,
+          "attachment": true,
+          "reasoning": true,
+          "temperature": true,
+          "limit": { "context": 400000, "output": 128000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "o3": {
+          "name": "O3",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": { "context": 200000, "output": 100000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "o4-mini": {
+          "name": "O4 Mini",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": { "context": 200000, "output": 100000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        }
+      },
+      "options": {
+        "apiKey": "YOUR-AZURE-AI-FOUNDRY-API-KEY-HERE"
+      }
+    },
+    "azure-ai-foundry-grok": {
+      "name": "Azure AI Foundry (Grok)",
+      "npm": "@ai-sdk/openai-compatible",
+      "api": "https://YOUR-PROJECT.services.ai.azure.com/openai/v1",
+      "env": ["AZURE_AI_FOUNDRY_API_KEY"],
+      "models": {
+        "grok-4": {
+          "name": "Grok 4",
+          "tool_call": true,
+          "reasoning": true,
+          "temperature": true,
+          "limit": { "context": 256000, "output": 32000 },
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "grok-code-fast-1": {
+          "name": "Grok Code Fast",
+          "tool_call": true,
+          "temperature": true,
+          "limit": { "context": 256000, "output": 10000 },
+          "modalities": { "input": ["text"], "output": ["text"] }
+        }
+      },
+      "options": {
+        "apiKey": "YOUR-AZURE-AI-FOUNDRY-API-KEY-HERE"
+      }
+    }
+  }
+}

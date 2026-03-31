@@ -1,0 +1,34 @@
+{
+  "name": "claude-jira-skill",
+  "version": "2.0.0",
+  "description": "Claude Code skill for JIRA project and issue management",
+  "type": "module",
+  "scripts": {
+    "my-issues": "node scripts/my-issues.js",
+    "my-projects": "node scripts/my-projects.js",
+    "view": "node scripts/view-issue.js",
+    "create": "node scripts/create-issue.js",
+    "create-epic": "node scripts/create-epic.js",
+    "create-subtask": "node scripts/create-subtask.js",
+    "update": "node scripts/update-issue.js",
+    "update-desc": "node scripts/update-description.js",
+    "assign": "node scripts/assign-issue.js",
+    "search": "node scripts/search.js",
+    "report": "node scripts/report.js",
+    "epic": "node scripts/epic-view.js",
+    "epic-tasks": "node scripts/view-epic-tasks.js",
+    "comments": "node scripts/get-comments.js",
+    "subtasks": "node scripts/list-subtasks.js",
+    "test": "node scripts/test-connection.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "jira",
+    "claude",
+    "skill",
+    "project-management"
+  ],
+  "license": "MIT"
+}
