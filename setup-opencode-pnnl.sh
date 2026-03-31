@@ -213,7 +213,7 @@ print_ok "ESM package boundary set at $OPENCODE_PACKAGE_FILE"
 
 print_step "Testing JIRA connection..."
 
-if node "$SCRIPT_DIR/scripts/test-connection.js" 2>&1; then
+if node "$SCRIPT_DIR/skills/jira/scripts/test-connection.js" 2>&1; then
   print_ok "JIRA connection successful"
 else
   echo "    WARNING: JIRA connection test failed. Check your URL, email, and token."
